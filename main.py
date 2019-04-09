@@ -1,14 +1,14 @@
-import medpy.io
-import medpy.filter
-
+import numpy as np
 import configuration as cnf
-from src import loader, viewer
+from src import io_manager, patient, features_extractor, viewer
 
+io_manager = io_manager.IOManager()
+patient = patient.Patient()
+features_extractor = features_extractor.FeaturesExtractor(patient)
 viewer = viewer.Viewer()
-viewer.execute_system_command_and_continue(['itksnap', cnf.DATA_PATH / cnf.PATIENT])
 
-image_data, image_header = medpy.io.load(cnf.DATA_PATH / cnf.PATIENT)
-print(image_data.shape)
+patient.load_patient_data(io_manager)
+features_extractor.extract_intensities(0)
+viewer.show_histogram_from_image(patient.data[:, :, 0], 100)
 
-new_image = medpy.filter.smoothing.anisotropic_diffusion(image_data, gamma=0.9, kappa=100)
-medpy.io.save(new_image, cnf.DATA_PATH / cnf.OUTPUT, image_header)
+viewer.show_image(patient.data[:, :, 0], np.ma.masked_outside(patient.data[:, :, 0], 750, 1250))
